@@ -25,9 +25,9 @@ show_help() {
 	printf "Wrapper around 'asciidoctor' and 'asciidoctor-pdf' with the goal \n"
 	printf "to use less parameters due to use of some conventions."
 	printf "\n\n"
-    printf "    -b, --basedir BASEDIR   Setting BASEDIR as basedir. If none is that the directory of FILE is used.\n"
+    printf "    -b, --basedir BASEDIR   Setting BASEDIR as basedir. If none is set, the directory of FILE is used.\n"
     printf "    -H, --home HOMEDIR      Setting HOMEDIR as adoc home. In this structered folder the pdf themes are looked for.\n"
-    printf "                            If not set per default the environment variable ADOC_HOME is used.\n"
+    printf "                            If not set the environment variable ADOC_HOME is used as a default.\n"
     printf "                            If ADOC_HOME is not set 'basedir' is used.\n"
 	printf "    -m, --marked2           Using the marked2 environment variable 'MARKED_ORIGIN' as basedir.\n"
 	printf "    -o, --options           Options directly passed to 'asciidoctor'. Must be placed in '' or \"\" to avoid whitespace.\n"
@@ -81,10 +81,11 @@ run_asciidoctor() {
 	  --section-numbers \
 	  --backend $backend \
 	  --attribute icons=font \
+	  --require asciidoctor-diagram \
 	  --doctype book $themepart $ofpart $options $infile
 }
 # FUNCTIONS END ##################
-
+#--require asciidoctor-diagram \
 
 # MAIN START ##################
 adoc=`which asciidoctor`
@@ -93,7 +94,7 @@ if [ $? -ne 0 ]; then
 fi
 verbose=0
 basedir=""
-home=""
+home=$ADOC_HOME
 backend=html5
 infile=""
 outfile=""
@@ -149,7 +150,7 @@ while :; do
 	    -t|--theme)
             if [ "$2" ]; then
             	theme=$2
-            	themepart="--attribute pdf-style=$theme --attribute pdf-stylesdir=$home/themes/$theme/ --attribute pdf-fontsdir=$home/themes/$theme/fonts/"
+            	themepart="--attribute pdf-style=$theme-theme.yml --attribute pdf-stylesdir=$home/themes/$theme/ --attribute pdf-fontsdir=$home/themes/$theme/fonts/"
                 shift
             else
                 die 'ERROR: "--theme" requires a non-empty option argument.'
@@ -179,8 +180,10 @@ while :; do
 				infile=$@
 				if [ "X$basedir" = "X" ]; then
 					basedir=$(dirname $infile)
-				fi
-				
+				fi				
+				if [ "X$home" = "X" ]; then
+		  			die "ERROR: Can not find home directory. Use Parameter or set ADOC_HOME environment variable to your asciidoc directory above themes and documents."
+				fi	
 			else
 				die "ERROR: input 'adoc' file is required to run."
 			fi
